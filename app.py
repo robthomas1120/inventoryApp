@@ -21,6 +21,15 @@ def init_db():
             last_updated TEXT
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_name TEXT NOT NULL,
+            phone_number TEXT NOT NULL,
+            total REAL NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -58,6 +67,7 @@ def add_item():
         conn.close()
         return jsonify({'message': 'Item added successfully!'})
 
+# Route to update item quantity
 @app.route('/items/<int:item_id>', methods=['PUT'])
 def update_quantity(item_id):
     data = request.get_json()
@@ -73,15 +83,69 @@ def update_quantity(item_id):
     conn.close()
     return jsonify({'message': 'Quantity updated successfully!'})
 
-# Route to render checkout page
-@app.route('/checkout')
-def checkout():
+# Route to render checkout page (GET request)
+@app.route('/checkout', methods=['GET'])
+def render_checkout_page():
     return render_template('checkout.html')  # Render checkout.html from the templates folder
 
-# Route to render history page
-@app.route('/history')
-def history():
+# Route to handle checkout logic (POST request)
+@app.route('/checkout', methods=['POST'])
+def checkout():
+    data = request.get_json()
+
+    customer_name = data['customer_name']
+    phone_number = data['phone_number']
+    items = data['items']
+    total = data['total']
+    timestamp = data['timestamp']
+
+    # Save to history table
+    conn = sqlite3.connect('inventory.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO history (customer_name, phone_number, total, timestamp)
+        VALUES (?, ?, ?, ?)
+    ''', (customer_name, phone_number, total, timestamp))
+
+    # Update inventory and subtract the items
+    for item in items:
+        cursor.execute('''
+            UPDATE items
+            SET quantity = quantity - ?
+            WHERE id = ?
+        ''', (item['quantity'], item['id']))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'Checkout successful!'})
+
+# Route to render history page (GET request)
+@app.route('/history', methods=['GET'])
+def render_history_page():
     return render_template('history.html')  # Render history.html from the templates folder
+
+# Route to fetch checkout history
+@app.route('/history-data', methods=['GET'])
+def history_data():
+    conn = sqlite3.connect('inventory.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM history')
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Prepare the data in a JSON-compatible format
+    history = []
+    for row in rows:
+        history.append({
+            'customer_name': row[1],
+            'phone_number': row[2],
+            'total': row[3],
+            'timestamp': row[4],
+        })
+
+    return jsonify(history)
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
