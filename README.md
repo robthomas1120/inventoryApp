@@ -1,1 +1,1 @@
-inventory app
+inventory app for warehouses
