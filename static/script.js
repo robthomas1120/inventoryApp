@@ -1,21 +1,35 @@
 // Fetch all items from the database
 async function fetchItems() {
-    const response = await fetch('/items');
-    const items = await response.json();
-    const container = document.getElementById('inventory-container');
-    container.innerHTML = '';
-    items.forEach(item => {
-        const box = document.createElement('div');
-        box.classList.add('item-box');
-        box.onclick = () => openQuantityWindow(item);  // Pass the whole item object
-        box.innerHTML = `
-            <img src="${item.picture}" alt="${item.name}">
-            <h3>${item.name}</h3>
-            <p>${item.description}</p>
-        `;
-        container.appendChild(box);
-    });
+    try {
+        const response = await fetch('/items');
+        if (!response.ok) {
+            throw new Error('Failed to fetch items');
+        }
+        const items = await response.json();
+
+        // Check if the items are received correctly
+        if (!items || items.length === 0) {
+            console.log('No items found');
+        }
+
+        const container = document.getElementById('inventory-container');
+        container.innerHTML = '';  // Clear previous items
+        items.forEach(item => {
+            const box = document.createElement('div');
+            box.classList.add('item-box');
+            box.onclick = () => openQuantityWindow(item[0]); // Using item[0] as the ID
+            box.innerHTML = `
+                <img src="${item[3]}" alt="${item[1]}" width="100" height="100">
+                <h3>${item[1]}</h3>
+                <p>${item[2]}</p>
+            `;
+            container.appendChild(box);
+        });
+    } catch (error) {
+        console.error('Error fetching items:', error);
+    }
 }
+
 
 // Add a new item to the database
 async function addItem() {
