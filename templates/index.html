@@ -15,8 +15,29 @@
             <input type="file" id="picture" accept="image/*">
             <button onclick="addItem()">Add Item</button>
         </div>
+
+        <!-- Navigation Buttons for Checkout and History -->
+        <div class="navigation-buttons">
+            <button onclick="window.location.href='checkout.html'">Go to Checkout</button>
+            <button onclick="window.location.href='history.html'">Order History</button>
+        </div>
+
         <div id="inventory-container" class="inventory-container"></div>
     </div>
-    <script src="/static/script.js"></script>
+
+    <!-- Modal for updating quantity -->
+    <div id="quantity-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2 id="modal-item-name">Update Quantity</h2>
+            <input type="number" id="quantityChange" placeholder="Quantity change" value="0">
+            <div class="quantity-buttons">
+                <button onclick="submitQuantityChange(1)">Add Quantity</button>
+                <button onclick="submitQuantityChange(-1)">Subtract Quantity</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js" defer></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, url_for
+from flask import Flask, request, jsonify, render_template, url_for, send_from_directory
 import sqlite3
 from datetime import datetime
 import os
@@ -6,6 +6,16 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'  # Folder to store uploaded images
+
+HTML_FILES_DIR = os.path.join(os.path.dirname(__file__), 'static')  # For example, use 'static' folder
+
+@app.route('/checkout.html')
+def checkout():
+    return send_from_directory(HTML_FILES_DIR, 'checkout.html')
+
+@app.route('/history.html')
+def history():
+    return send_from_directory(HTML_FILES_DIR, 'history.html')
 
 # Initialize SQLite database
 def init_db():

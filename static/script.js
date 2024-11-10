@@ -7,21 +7,18 @@ async function fetchItems() {
         }
         const items = await response.json();
 
-        // Check if the items are received correctly
-        if (!items || items.length === 0) {
-            console.log('No items found');
-        }
-
         const container = document.getElementById('inventory-container');
         container.innerHTML = '';  // Clear previous items
+
         items.forEach(item => {
             const box = document.createElement('div');
             box.classList.add('item-box');
-            box.onclick = () => openQuantityWindow(item[0]); // Using item[0] as the ID
+            box.onclick = () => openQuantityWindow(item);
             box.innerHTML = `
                 <img src="${item[3]}" alt="${item[1]}" width="100" height="100">
                 <h3>${item[1]}</h3>
                 <p>${item[2]}</p>
+                <div class="quantity-display">Qty: ${item[4] || 0}</div>
             `;
             container.appendChild(box);
         });
@@ -29,8 +26,48 @@ async function fetchItems() {
         console.error('Error fetching items:', error);
     }
 }
+// Open the modal to adjust quantity
+function openQuantityWindow(item) {
+    const modal = document.getElementById('quantity-modal');
+    document.getElementById('modal-item-name').innerText = `Update Quantity for ${item[1]}`;
+    modal.style.display = 'block';
+    modal.dataset.itemId = item[0]; // Save item ID to modal for later
+    modal.dataset.currentQuantity = item[4] || 0; // Save current quantity for validation
+}
 
+// Submit the quantity change (either add or subtract)
+async function submitQuantityChange(changeFactor) {
+    const modal = document.getElementById('quantity-modal');
+    const itemId = modal.dataset.itemId;
+    const currentQuantity = parseInt(modal.dataset.currentQuantity);
+    const quantityChange = parseInt(document.getElementById('quantityChange').value) * changeFactor;
 
+    if (isNaN(quantityChange) || quantityChange === 0) {
+        alert('Please enter a valid quantity change.');
+        return;
+    }
+
+    // Check if the new quantity would be negative
+    if (currentQuantity + quantityChange < 0) {
+        alert("Quantity cannot go below zero. Please enter a valid quantity change.");
+        return;
+    }
+
+    // Update quantity if valid
+    await updateQuantity(itemId, quantityChange);
+    modal.style.display = 'none';
+}
+
+// Update quantity for an item
+async function updateQuantity(itemId, quantityChange) {
+    await fetch(`/items/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity_change: quantityChange })
+    });
+
+    fetchItems(); // Refresh items after update
+}
 // Add a new item to the database
 async function addItem() {
     const name = document.getElementById('name').value;
@@ -49,36 +86,5 @@ async function addItem() {
     fetchItems();
 }
 
-// Open a new window to adjust quantity
-function openQuantityWindow(item) {
-    const quantityWindow = window.open("", "Update Quantity", "width=400,height=300");
-    quantityWindow.document.write(`
-        <html>
-        <head><title>Update Quantity</title></head>
-        <body>
-            <h2>Update Quantity for ${item.name}</h2>
-            <input type="number" id="quantityChange" placeholder="Quantity change" value="0" />
-            <button onclick="window.opener.updateQuantity(${item.id}, document.getElementById('quantityChange').value)">Update</button>
-        </body>
-        </html>
-    `);
-}
-
-// Update quantity for an item
-async function updateQuantity(itemId, quantityChange) {
-    const change = parseInt(quantityChange);
-    if (isNaN(change)) {
-        alert('Please enter a valid quantity change.');
-        return;
-    }
-
-    await fetch(`/items/${itemId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity_change: change })
-    });
-
-    fetchItems();
-}
-
+// Initialize items on page load
 window.onload = fetchItems;
