@@ -35,12 +35,22 @@ function openQuantityWindow(item) {
     modal.style.display = 'block';
     modal.dataset.itemId = item[0]; // Save item ID to modal for later
     modal.dataset.currentQuantity = item[4] || 0; // Save current quantity for validation
+
+    // Reset the input field and ensure it's enabled
+    const quantityInput = document.getElementById('quantityChange');
+    quantityInput.value = 0;  // Reset the value
+    quantityInput.disabled = false;  // Enable the input field if it was disabled
 }
 
 // Close the modal when the close button (×) is clicked
 document.getElementById('close-modal').addEventListener('click', function() {
     const modal = document.getElementById('quantity-modal');
     modal.style.display = 'none';
+
+    // Reset the input value when closing the modal
+    const quantityInput = document.getElementById('quantityChange');
+    quantityInput.value = 0;  // Reset the value
+    quantityInput.disabled = false;  // Ensure the input is enabled
 });
 
 // Close the modal if clicking outside the modal content
@@ -48,6 +58,11 @@ window.addEventListener('click', function(event) {
     const modal = document.getElementById('quantity-modal');
     if (event.target === modal) {
         modal.style.display = 'none';
+
+        // Reset the input value when closing the modal
+        const quantityInput = document.getElementById('quantityChange');
+        quantityInput.value = 0;  // Reset the value
+        quantityInput.disabled = false;  // Ensure the input is enabled
     }
 });
 
@@ -123,6 +138,10 @@ async function deleteItem(itemId) {
         });
 
         if (response.ok) {
+            // Hide the quantity modal if it was open
+            const modal = document.getElementById('quantity-modal');
+            modal.style.display = 'none';
+
             fetchItems(); // Refresh the inventory after deletion
             alert("Item deleted successfully.");
         } else {
@@ -133,6 +152,5 @@ async function deleteItem(itemId) {
         alert("Error deleting the item.");
     }
 }
-
 // Initialize items on page load
 window.onload = fetchItems;
