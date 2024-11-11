@@ -18,6 +18,7 @@ def init_db():
             description TEXT NOT NULL,
             picture TEXT NOT NULL,
             quantity INTEGER DEFAULT 0,
+            price REAL NOT NULL,  -- Added price column
             last_updated TEXT
         )
     ''')
@@ -52,6 +53,7 @@ def get_items():
 def add_item():
     name = request.form['name']
     description = request.form['description']
+    price = float(request.form['price'])  # Get price from the form
     picture = request.files['picture']
 
     if picture:
@@ -61,8 +63,8 @@ def add_item():
         
         conn = sqlite3.connect('inventory.db')
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO items (name, description, picture) VALUES (?, ?, ?)',
-                       (name, description, picture_path))
+        cursor.execute('INSERT INTO items (name, description, picture, price) VALUES (?, ?, ?, ?)',
+                       (name, description, picture_path, price))
         conn.commit()
         conn.close()
         return jsonify({'message': 'Item added successfully!'})

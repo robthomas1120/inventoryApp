@@ -19,6 +19,7 @@ async function fetchItems() {
                 <h3>${item[1]}</h3>
                 <p>${item[2]}</p>
                 <div class="quantity-display">Qty: ${item[4] || 0}</div>
+                <div class="price-display">Price: ₱${item[5].toFixed(2)}</div>
             `;
             container.appendChild(box);
         });
@@ -26,6 +27,7 @@ async function fetchItems() {
         console.error('Error fetching items:', error);
     }
 }
+
 // Open the modal to adjust quantity
 function openQuantityWindow(item) {
     const modal = document.getElementById('quantity-modal');
@@ -68,15 +70,23 @@ async function updateQuantity(itemId, quantityChange) {
 
     fetchItems(); // Refresh items after update
 }
+
 // Add a new item to the database
 async function addItem() {
     const name = document.getElementById('name').value;
     const description = document.getElementById('description').value;
+    const price = parseFloat(document.getElementById('price').value);
     const picture = document.getElementById('picture').files[0];
+
+    if (isNaN(price) || price <= 0) {
+        alert('Please enter a valid price.');
+        return;
+    }
 
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
+    formData.append('price', price);
     formData.append('picture', picture);
 
     await fetch('/items', {
