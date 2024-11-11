@@ -8,14 +8,27 @@ function fetchHistory() {
 
             data.forEach(entry => {
                 const row = document.createElement('tr');
+
+                // Check if entry.items exists and is an array
+                const itemsBreakdown = Array.isArray(entry.items)
+                    ? entry.items.map(item => {
+                        const itemTotalPrice = (item.price * item.quantity).toFixed(2);
+                        return `${item.name} x${item.quantity} = ₱${itemTotalPrice}`;
+                    }).join('<br>')
+                    : 'No items available';
+
                 row.innerHTML = `
                     <td>${entry.customer_name}</td>
                     <td>${entry.phone_number}</td>
-                    <td>$${entry.total}</td>
+                    <td>${itemsBreakdown}</td>
+                    <td>₱${entry.total.toFixed(2)}</td>
                     <td>${entry.timestamp}</td>
                 `;
                 historyBody.appendChild(row);
             });
+        })
+        .catch(error => {
+            console.error('Error fetching history:', error);
         });
 }
 
