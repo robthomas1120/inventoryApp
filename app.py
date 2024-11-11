@@ -48,6 +48,20 @@ def get_items():
     conn.close()
     return jsonify(items)
 
+# route to delete items
+@app.route('/items/<int:item_id>', methods=['DELETE'])
+def delete_item(item_id):
+    try:
+        # Assuming you are using SQLite
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM items WHERE id = ?", (item_id,))
+        conn.commit()
+        conn.close()
+        return '', 200  # Return empty response with 200 status code
+    except Exception as e:
+        return str(e), 500
+
 # Route to add a new item with an image upload
 @app.route('/items', methods=['POST'])
 def add_item():

@@ -1,4 +1,3 @@
-// Fetch all items from the database
 async function fetchItems() {
     try {
         const response = await fetch('/items');
@@ -20,6 +19,7 @@ async function fetchItems() {
                 <p>${item[2]}</p>
                 <div class="quantity-display">Qty: ${item[4] || 0}</div>
                 <div class="price-display">Price: ₱${item[5].toFixed(2)}</div>
+                <button onclick="deleteItem(${item[0]})">Delete</button>
             `;
             container.appendChild(box);
         });
@@ -36,6 +36,21 @@ function openQuantityWindow(item) {
     modal.dataset.itemId = item[0]; // Save item ID to modal for later
     modal.dataset.currentQuantity = item[4] || 0; // Save current quantity for validation
 }
+
+// Close the modal when the close button (×) is clicked
+document.getElementById('close-modal').addEventListener('click', function() {
+    const modal = document.getElementById('quantity-modal');
+    modal.style.display = 'none';
+});
+
+// Close the modal if clicking outside the modal content
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('quantity-modal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
 
 // Submit the quantity change (either add or subtract)
 async function submitQuantityChange(changeFactor) {
@@ -94,6 +109,29 @@ async function addItem() {
         body: formData
     });
     fetchItems();
+}
+
+// Delete an item from the inventory
+async function deleteItem(itemId) {
+    const confirmDelete = confirm("Are you sure you want to delete this item?");
+    if (!confirmDelete) return;
+
+    try {
+        const response = await fetch(`/items/${itemId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (response.ok) {
+            fetchItems(); // Refresh the inventory after deletion
+            alert("Item deleted successfully.");
+        } else {
+            alert("Failed to delete the item.");
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        alert("Error deleting the item.");
+    }
 }
 
 // Initialize items on page load
