@@ -1,31 +1,84 @@
+let inventory = [];
+let filteredInventory = [];
+
 async function fetchItems() {
     try {
         const response = await fetch('/items');
         if (!response.ok) {
             throw new Error('Failed to fetch items');
         }
-        const items = await response.json();
-
-        const container = document.getElementById('inventory-container');
-        container.innerHTML = '';  // Clear previous items
-
-        items.forEach(item => {
-            const box = document.createElement('div');
-            box.classList.add('item-box');
-            box.onclick = () => openQuantityWindow(item);
-            box.innerHTML = `
-                <img src="${item[3]}" alt="${item[1]}" width="100" height="100">
-                <h3>${item[1]}</h3>
-                <p>${item[2]}</p>
-                <div class="quantity-display">Qty: ${item[4] || 0}</div>
-                <div class="price-display">Price: ₱${item[5].toFixed(2)}</div>
-                <button onclick="deleteItem(${item[0]})">Delete</button>
-            `;
-            container.appendChild(box);
-        });
+        inventory = await response.json();
+        filteredInventory = [...inventory];
+        displayItems(filteredInventory);
     } catch (error) {
         console.error('Error fetching items:', error);
     }
+}
+
+function displayItems(items) {
+    const container = document.getElementById('inventory-container');
+    container.innerHTML = '';  // Clear previous items
+
+    items.forEach(item => {
+        const box = document.createElement('div');
+        box.classList.add('item-box');
+        box.onclick = () => openQuantityWindow(item);
+        box.innerHTML = `
+            <img src="${item[3]}" alt="${item[1]}" width="100" height="100">
+            <h3>${item[1]}</h3>
+            <p>${item[2]}</p>
+            <div class="quantity-display">Qty: ${item[4] || 0}</div>
+            <div class="price-display">Price: ₱${item[5].toFixed(2)}</div>
+            <button onclick="deleteItem(${item[0]})">Delete</button>
+        `;
+        container.appendChild(box);
+    });
+}
+
+// Search functionality
+function handleSearch() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    filteredInventory = inventory.filter(item => 
+        item[1].toLowerCase().includes(searchTerm) // Search by name
+    );
+    displayItems(filteredInventory);
+}
+
+// Filter functionality
+function applyFilter() {
+    const filterAttribute = document.getElementById('filterAttribute').value;
+    const sortOrder = document.getElementById('sortOrder').value;
+    
+    let sortedItems = [...filteredInventory];
+    
+    sortedItems.sort((a, b) => {
+        let valueA, valueB;
+        
+        switch(filterAttribute) {
+            case 'name':
+                valueA = a[1].toLowerCase();
+                valueB = b[1].toLowerCase();
+                break;
+            case 'price':
+                valueA = a[5];
+                valueB = b[5];
+                break;
+            case 'quantity':
+                valueA = a[4] || 0;
+                valueB = b[4] || 0;
+                break;
+            default:
+                return 0;
+        }
+        
+        if (sortOrder === 'asc') {
+            return valueA > valueB ? 1 : -1;
+        } else {
+            return valueA < valueB ? 1 : -1;
+        }
+    });
+    
+    displayItems(sortedItems);
 }
 
 // Open the modal to adjust quantity
@@ -33,41 +86,33 @@ function openQuantityWindow(item) {
     const modal = document.getElementById('quantity-modal');
     document.getElementById('modal-item-name').innerText = `Update Quantity for ${item[1]}`;
     modal.style.display = 'block';
-    modal.dataset.itemId = item[0]; // Save item ID to modal for later
-    modal.dataset.currentQuantity = item[4] || 0; // Save current quantity for validation
+    modal.dataset.itemId = item[0];
+    modal.dataset.currentQuantity = item[4] || 0;
 
-    // Reset the input field and ensure it's enabled
     const quantityInput = document.getElementById('quantityChange');
-    quantityInput.value = 0;  // Reset the value
-    quantityInput.disabled = false;  // Enable the input field if it was disabled
+    quantityInput.value = 0;
+    quantityInput.disabled = false;
 }
 
-// Close the modal when the close button (×) is clicked
+// Close modal handlers
 document.getElementById('close-modal').addEventListener('click', function() {
     const modal = document.getElementById('quantity-modal');
     modal.style.display = 'none';
-
-    // Reset the input value when closing the modal
     const quantityInput = document.getElementById('quantityChange');
-    quantityInput.value = 0;  // Reset the value
-    quantityInput.disabled = false;  // Ensure the input is enabled
+    quantityInput.value = 0;
+    quantityInput.disabled = false;
 });
 
-// Close the modal if clicking outside the modal content
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('quantity-modal');
     if (event.target === modal) {
         modal.style.display = 'none';
-
-        // Reset the input value when closing the modal
         const quantityInput = document.getElementById('quantityChange');
-        quantityInput.value = 0;  // Reset the value
-        quantityInput.disabled = false;  // Ensure the input is enabled
+        quantityInput.value = 0;
+        quantityInput.disabled = false;
     }
 });
 
-
-// Submit the quantity change (either add or subtract)
 async function submitQuantityChange(changeFactor) {
     const modal = document.getElementById('quantity-modal');
     const itemId = modal.dataset.itemId;
@@ -79,18 +124,15 @@ async function submitQuantityChange(changeFactor) {
         return;
     }
 
-    // Check if the new quantity would be negative
     if (currentQuantity + quantityChange < 0) {
         alert("Quantity cannot go below zero. Please enter a valid quantity change.");
         return;
     }
 
-    // Update quantity if valid
     await updateQuantity(itemId, quantityChange);
     modal.style.display = 'none';
 }
 
-// Update quantity for an item
 async function updateQuantity(itemId, quantityChange) {
     await fetch(`/items/${itemId}`, {
         method: 'PUT',
@@ -98,10 +140,9 @@ async function updateQuantity(itemId, quantityChange) {
         body: JSON.stringify({ quantity_change: quantityChange })
     });
 
-    fetchItems(); // Refresh items after update
+    fetchItems();
 }
 
-// Add a new item to the database
 async function addItem() {
     const name = document.getElementById('name').value;
     const description = document.getElementById('description').value;
@@ -126,7 +167,6 @@ async function addItem() {
     fetchItems();
 }
 
-// Delete an item from the inventory
 async function deleteItem(itemId) {
     const confirmDelete = confirm("Are you sure you want to delete this item?");
     if (!confirmDelete) return;
@@ -138,11 +178,9 @@ async function deleteItem(itemId) {
         });
 
         if (response.ok) {
-            // Hide the quantity modal if it was open
             const modal = document.getElementById('quantity-modal');
             modal.style.display = 'none';
-
-            fetchItems(); // Refresh the inventory after deletion
+            fetchItems();
             alert("Item deleted successfully.");
         } else {
             alert("Failed to delete the item.");
@@ -152,5 +190,5 @@ async function deleteItem(itemId) {
         alert("Error deleting the item.");
     }
 }
-// Initialize items on page load
+
 window.onload = fetchItems;

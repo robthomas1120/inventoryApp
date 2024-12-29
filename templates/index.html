@@ -18,9 +18,27 @@
         </div>
 
         <div class="navigation-buttons">
-            <!-- Update the URLs to match the Flask routes -->
             <button onclick="window.location.href='/checkout'">Go to Checkout</button>
             <button onclick="window.location.href='/history'">Order History</button>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="search-filter-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search items..." oninput="handleSearch()">
+            </div>
+            <div class="filter-controls">
+                <select id="filterAttribute">
+                    <option value="name">Name</option>
+                    <option value="price">Price</option>
+                    <option value="quantity">Quantity</option>
+                </select>
+                <select id="sortOrder">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+                <button onclick="applyFilter()">Sort</button>
+            </div>
         </div>
 
         <div id="inventory-container" class="inventory-container"></div>
