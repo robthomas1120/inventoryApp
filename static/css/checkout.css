@@ -1,22 +1,26 @@
 /* static/css/checkout.css */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: #1a1a1a;
+    color: #ffffff;
     margin: 0;
     padding: 0;
+    line-height: 1.6;
 }
 
 .container {
     max-width: 800px;
     margin: 50px auto;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #2a2a2a;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 h1 {
     text-align: center;
+    color: #ffffff;
+    margin-bottom: 30px;
 }
 
 #inventory-list ul,
@@ -25,19 +29,44 @@ h1 {
     padding: 0;
 }
 
+#inventory-list li,
+#cart-items li {
+    background-color: #333;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#inventory-list li:hover,
+#cart-items li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
 button {
-    padding: 10px 20px;
+    padding: 12px 25px;
     background-color: #4CAF50;
     color: white;
     border: none;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 button:hover {
     background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 #cart p {
     font-weight: bold;
+    color: #ffffff;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 15px;
+    margin: 20px 0;
 }

@@ -1,4 +1,3 @@
-// static/js/history.js
 function fetchHistory() {
     fetch('/history-data')
         .then(response => response.json())
@@ -9,7 +8,7 @@ function fetchHistory() {
             data.forEach(entry => {
                 const row = document.createElement('tr');
 
-                // Check if entry.items exists and is an array
+                // Format items breakdown
                 const itemsBreakdown = Array.isArray(entry.items)
                     ? entry.items.map(item => {
                         const itemTotalPrice = (item.price * item.quantity).toFixed(2);

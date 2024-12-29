@@ -36,10 +36,10 @@ function addToCart(itemId) {
                 name: item[1],
                 type: item[2].toLowerCase(),
                 quantity: 1,
-                price: item[5] || 0 // Use the price from the inventory item
+                price: item[5] || 0
             });
         }
-        item[4]--; // Decrease the stock in the inventory
+        item[4]--;
         updateCart();
     }
 }
@@ -54,7 +54,7 @@ function removeFromCart(itemId) {
     }
     const inventoryItem = inventory.find(i => i[0] === itemId);
     if (inventoryItem) {
-        inventoryItem[4]++; // Return stock to the inventory
+        inventoryItem[4]++;
     }
     updateCart();
 }
@@ -80,6 +80,17 @@ function updateCart() {
     totalPrice.textContent = total.toFixed(2);
 }
 
+function formatDateTime(date) {
+    return date.toLocaleDateString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
 function checkout() {
     const customerName = document.getElementById('customer-name').value;
     const phoneNumber = document.getElementById('phone-number').value;
@@ -101,7 +112,7 @@ function checkout() {
         phone_number: phoneNumber,
         items: itemsCheckedOut,
         total: parseFloat(document.getElementById('total-price').textContent),
-        timestamp: new Date().toISOString(),
+        timestamp: formatDateTime(new Date()),
     };
 
     fetch('/checkout', {
@@ -118,5 +129,4 @@ function checkout() {
     });
 }
 
-// Load inventory on page load
 window.onload = fetchInventory;
