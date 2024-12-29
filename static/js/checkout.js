@@ -31,10 +31,32 @@ function displayInventory() {
                    max="${item[4]}" 
                    value="0" 
                    class="quantity-input"
-                   onchange="updateCart(${item[0]}, this.value)">
+                   onchange="validateAndUpdateCart(${item[0]}, this)">
         `;
         inventoryList.appendChild(li);
     });
+}
+
+function validateAndUpdateCart(itemId, inputElement) {
+    const quantity = parseInt(inputElement.value);
+    const item = inventory.find(item => item[0] === itemId);
+    
+    if (!item) return;
+
+    // Reset invalid inputs without updating cart
+    if (quantity > item[4]) {
+        alert(`Sorry, only ${item[4]} ${item[1]} available in stock.`);
+        inputElement.value = 0;  // Reset to 0 instead of max
+        return;
+    }
+
+    if (quantity < 0) {
+        alert("Quantity cannot be negative.");
+        inputElement.value = 0;
+        return;
+    }
+
+    updateCart(itemId, quantity);
 }
 
 function updateCart(itemId, quantity) {
