@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <link rel="stylesheet" href="/static/css/checkout.css">
+</head>
+<body>
+
+    <div class="navigation-buttons">
+        <button onclick="window.location.href='/'">Go to Inventory</button>
+        <button onclick="window.location.href='/history'">Order History</button>
+    </div>
+
+    <div class="container">
+        <h1>Checkout</h1>
+        
+        <!-- Inventory List -->
+        <div id="inventory-list">
+            <h2>Items Available</h2>
+            <ul id="inventory"></ul>
+        </div>
+
+        <!-- Cart Section -->
+        <div id="cart">
+            <h2>Your Cart</h2>
+            <ul id="cart-items"></ul>
+            <p>Total: ₱<span id="total-price">0.00</span></p>
+            <button onclick="checkout()">Checkout</button>
+        </div>
+
+        <!-- Customer Info -->
+        <div id="customer-info">
+            <input type="text" id="customer-name" placeholder="Customer Name" required>
+            <input type="text" id="phone-number" placeholder="Phone Number" required>
+        </div>
+    </div>
+
+    <script src="/static/js/checkout.js"></script>
+</body>
+</html>
