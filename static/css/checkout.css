@@ -9,7 +9,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 50px auto;
     background-color: #2a2a2a;
     padding: 30px;
@@ -17,10 +17,126 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-h1 {
+.navigation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.navigation-buttons button {
+    padding: 12px 25px;
+    font-size: 16px;
+    background-color: #4a4a4a;
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 150px;
+}
+
+.navigation-buttons button:hover {
+    background-color: #5a5a5a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+h1, h2 {
     text-align: center;
     color: #ffffff;
     margin-bottom: 30px;
+}
+
+#customer-info {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+#customer-info input {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 14px;
+    background-color: #333;
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.search-filter-container {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #333;
+    border-radius: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 14px;
+    background-color: #444;
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-controls select {
+    padding: 10px 15px;
+    font-size: 14px;
+    background-color: #444;
+    color: #ffffff;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.filter-controls button {
+    padding: 10px 20px;
+    font-size: 14px;
+    background-color: #444;
+    color: #ffffff;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.main-content {
+    display: flex;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+#inventory-list {
+    flex: 2;
+}
+
+#cart {
+    flex: 1;
+    background-color: #333;
+    padding: 20px;
+    border-radius: 15px;
+    height: fit-content;
 }
 
 #inventory-list ul,
@@ -29,44 +145,85 @@ h1 {
     padding: 0;
 }
 
-#inventory-list li,
-#cart-items li {
+.inventory-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     background-color: #333;
     margin: 10px 0;
     padding: 15px;
     border-radius: 15px;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-#inventory-list li:hover,
-#cart-items li:hover {
+.inventory-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-button {
-    padding: 12px 25px;
-    background-color: #4CAF50;
+.item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.quantity-input {
+    width: 80px;
+    padding: 8px;
+    background-color: #444;
+    color: #ffffff;
+    border: none;
+    border-radius: 15px;
+    text-align: center;
+}
+
+#cart-items li {
+    background-color: #444;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkout-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #444;
     color: white;
     border: none;
-    cursor: pointer;
     border-radius: 25px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    margin-top: 20px;
 }
 
-button:hover {
-    background-color: #45a049;
+.checkout-btn:hover {
+    background-color: #555;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-#cart p {
-    font-weight: bold;
-    color: #ffffff;
-    padding: 10px;
-    background-color: #333;
-    border-radius: 15px;
-    margin: 20px 0;
+@media screen and (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+    
+    #customer-info {
+        flex-direction: column;
+    }
+    
+    .search-filter-container {
+        flex-direction: column;
+    }
+    
+    .filter-controls {
+        width: 100%;
+        justify-content: center;
+    }
 }

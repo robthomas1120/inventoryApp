@@ -1,11 +1,13 @@
 let inventory = [];
 let cart = [];
+let filteredInventory = [];
 
 function fetchInventory() {
     fetch('/items')
         .then(response => response.json())
         .then(data => {
             inventory = data;
+            filteredInventory = [...inventory];
             displayInventory();
         });
 }
@@ -14,52 +16,49 @@ function displayInventory() {
     const inventoryList = document.getElementById('inventory');
     inventoryList.innerHTML = '';
 
-    inventory.forEach(item => {
+    filteredInventory.forEach(item => {
         const li = document.createElement('li');
+        li.className = 'inventory-item';
         li.innerHTML = `
-            <span>${item[1]} - ${item[2]} (Stock: ${item[4]})</span>
-            <button onclick="addToCart(${item[0]})">Add to Cart</button>
+            <img src="${item[3]}" alt="${item[1]}" class="item-image">
+            <div class="item-details">
+                <h3>${item[1]} - ${item[2]}</h3>
+                <p>Price: ₱${item[5].toFixed(2)}</p>
+                <p>Stock: ${item[4]}</p>
+            </div>
+            <input type="number" 
+                   min="0" 
+                   max="${item[4]}" 
+                   value="0" 
+                   class="quantity-input"
+                   onchange="updateCart(${item[0]}, this.value)">
         `;
         inventoryList.appendChild(li);
     });
 }
 
-function addToCart(itemId) {
+function updateCart(itemId, quantity) {
+    quantity = parseInt(quantity);
     const item = inventory.find(item => item[0] === itemId);
-    if (item && item[4] > 0) {
-        const cartItem = cart.find(i => i.id === itemId);
-        if (cartItem) {
-            cartItem.quantity++;
-        } else {
-            cart.push({
-                id: itemId,
-                name: item[1],
-                type: item[2].toLowerCase(),
-                quantity: 1,
-                price: item[5] || 0
-            });
-        }
-        item[4]--;
-        updateCart();
+    
+    // Remove existing item from cart
+    cart = cart.filter(i => i.id !== itemId);
+    
+    // Add new quantity if greater than 0
+    if (quantity > 0 && item) {
+        cart.push({
+            id: itemId,
+            name: item[1],
+            type: item[2].toLowerCase(),
+            quantity: quantity,
+            price: item[5] || 0
+        });
     }
+    
+    displayCart();
 }
 
-function removeFromCart(itemId) {
-    const cartItem = cart.find(i => i.id === itemId);
-    if (cartItem) {
-        cartItem.quantity--;
-        if (cartItem.quantity === 0) {
-            cart = cart.filter(i => i.id !== itemId);
-        }
-    }
-    const inventoryItem = inventory.find(i => i[0] === itemId);
-    if (inventoryItem) {
-        inventoryItem[4]++;
-    }
-    updateCart();
-}
-
-function updateCart() {
+function displayCart() {
     const cartItems = document.getElementById('cart-items');
     const totalPrice = document.getElementById('total-price');
     
@@ -68,16 +67,53 @@ function updateCart() {
     
     cart.forEach(item => {
         const li = document.createElement('li');
+        const itemTotal = item.quantity * item.price;
         li.innerHTML = `
-            ${item.name} - ${item.quantity} x ₱${item.price.toFixed(2)} 
-            = ₱${(item.quantity * item.price).toFixed(2)}
-            <button onclick="removeFromCart(${item.id})">Remove</button>
+            <div>
+                <strong>${item.name}</strong><br>
+                ${item.quantity} x ₱${item.price.toFixed(2)}
+            </div>
+            <div>₱${itemTotal.toFixed(2)}</div>
         `;
         cartItems.appendChild(li);
-        total += item.quantity * item.price;
+        total += itemTotal;
     });
 
     totalPrice.textContent = total.toFixed(2);
+}
+
+function handleSearch() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    filteredInventory = inventory.filter(item => 
+        item[1].toLowerCase().includes(searchTerm) || 
+        item[2].toLowerCase().includes(searchTerm)
+    );
+    displayInventory();
+}
+
+function applyFilter() {
+    const filterAttribute = document.getElementById('filterAttribute').value;
+    const sortOrder = document.getElementById('sortOrder').value;
+    
+    filteredInventory.sort((a, b) => {
+        let comparison = 0;
+        
+        switch(filterAttribute) {
+            case 'name':
+                comparison = a[1].localeCompare(b[1]);
+                break;
+            case 'price':
+                comparison = a[5] - b[5];
+                break;
+            case 'quantity':
+                comparison = a[4] - b[4];
+                break;
+        }
+        
+        return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    displayInventory();
 }
 
 function formatDateTime(date) {
@@ -100,17 +136,15 @@ function checkout() {
         return;
     }
 
-    const itemsCheckedOut = cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-    }));
+    if (cart.length === 0) {
+        alert('Cart is empty!');
+        return;
+    }
 
     const data = {
         customer_name: customerName,
         phone_number: phoneNumber,
-        items: itemsCheckedOut,
+        items: cart,
         total: parseFloat(document.getElementById('total-price').textContent),
         timestamp: formatDateTime(new Date()),
     };
@@ -126,6 +160,10 @@ function checkout() {
     .then(data => {
         alert('Checkout successful!');
         window.location.href = '/history';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error during checkout. Please try again.');
     });
 }
 

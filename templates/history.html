@@ -1,4 +1,3 @@
-<!-- templates/history.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,15 +7,33 @@
     <link rel="stylesheet" href="/static/css/history.css">
 </head>
 <body>
-
     <div class="navigation-buttons">
-        <!-- Update the URLs to match the Flask routes -->
         <button onclick="window.location.href='/'">Go to Inventory</button>
         <button onclick="window.location.href='/checkout'">Go to Checkout</button>
     </div>
 
     <div class="container">
         <h1>Order History</h1>
+        
+        <!-- Search and Filter Section -->
+        <div class="search-filter-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by customer name..." oninput="handleSearch()">
+            </div>
+            <div class="filter-controls">
+                <select id="filterAttribute">
+                    <option value="customer_name">Customer Name</option>
+                    <option value="total">Total Price</option>
+                    <option value="timestamp">Date Ordered</option>
+                </select>
+                <select id="sortOrder">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+                <button onclick="applyFilter()">Sort</button>
+            </div>
+        </div>
+
         <table id="history-table">
             <thead>
                 <tr>
