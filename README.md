@@ -1,7 +1,7 @@
 inventory app for warehouses
 
 make a venv folder to install flask inside because if this is not done it will not open the file
-
+python3 -m venv venv
 
 activate the virtual environment before installing flask
 source venv/bin/activate
