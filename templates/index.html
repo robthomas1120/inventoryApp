@@ -18,6 +18,8 @@
         </div>
 
         <div class="navigation-buttons">
+            <button id="delete-mode-btn" onclick="toggleDeleteMode()">Delete Item</button>
+            <button onclick="viewTrash()">View Trash</button>
             <button onclick="window.location.href='/checkout'">Go to Checkout</button>
             <button onclick="window.location.href='/history'">Order History</button>
         </div>
@@ -55,6 +57,14 @@
                 <button onclick="submitQuantityChange(-1)">Subtract Quantity</button>
             </div>
         </div>
+    </div>
+
+    <div class="trash-container" style="display: none;">
+        <div class="trash-header">
+            <h2>Trash</h2>
+            <button onclick="toggleTrash()" class="restore-btn">Close Trash</button>
+        </div>
+        <div id="trash-items-container" class="inventory-container"></div>
     </div>
 
     <script src="/static/js/script.js" defer></script>

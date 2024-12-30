@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template, url_for
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
 import json
@@ -30,6 +30,18 @@ def init_db():
             items_json TEXT NOT NULL,  -- Store items as JSON string
             total REAL NOT NULL,
             timestamp TEXT NOT NULL
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS trash_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_id INTEGER,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            picture TEXT NOT NULL,
+            quantity INTEGER NOT NULL,
+            price REAL NOT NULL,
+            deleted_at TEXT NOT NULL
         )
     ''')
     conn.commit()
@@ -155,6 +167,101 @@ def history_data():
         })
 
     return jsonify(history)
+
+
+# Add these new routes for trash management
+@app.route('/trash', methods=['GET'])
+def get_trash():
+    conn = sqlite3.connect('inventory.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM trash_items')
+    items = cursor.fetchall()
+    conn.close()
+    return jsonify(items)
+
+@app.route('/items/<int:item_id>/delete', methods=['DELETE'])
+def move_to_trash(item_id):
+    conn = None
+    try:
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        
+        # First check if item exists
+        cursor.execute("SELECT * FROM items WHERE id = ?", (item_id,))
+        item = cursor.fetchone()
+        
+        if not item:
+            return jsonify({'error': 'Item not found'}), 404
+            
+        # Move item to trash with quantity
+        cursor.execute('''
+            INSERT INTO trash_items 
+            (item_id, name, description, picture, quantity, price, deleted_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            item[0],               # item_id
+            item[1],               # name
+            item[2],               # description
+            item[3],               # picture
+            item[4] if item[4] is not None else 0,  # quantity with null check
+            item[5],               # price
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # deleted_at
+        ))
+        
+        # Delete from items table
+        cursor.execute("DELETE FROM items WHERE id = ?", (item_id,))
+        
+        # Clean up old trash items (older than 1 week)
+        week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("DELETE FROM trash_items WHERE deleted_at < ?", (week_ago,))
+        
+        conn.commit()
+        return jsonify({'message': 'Item moved to trash successfully'})
+        
+    except sqlite3.Error as e:
+        # Log the actual SQL error
+        print(f"Database error: {str(e)}")
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'Database error occurred'}), 500
+        
+    except Exception as e:
+        # Log any other errors
+        print(f"Unexpected error: {str(e)}")
+        if conn:
+            conn.rollback()
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+        
+    finally:
+        if conn:
+            conn.close()
+            
+@app.route('/trash/<int:item_id>/restore', methods=['POST'])
+def restore_from_trash(item_id):
+    try:
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        
+        # Get item from trash
+        cursor.execute("SELECT * FROM trash_items WHERE item_id = ?", (item_id,))
+        trash_item = cursor.fetchone()
+        
+        if trash_item:
+            # Restore to items table with original quantity
+            cursor.execute('''
+                INSERT INTO items (name, description, picture, quantity, price)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (trash_item[2], trash_item[3], trash_item[4], trash_item[5], trash_item[6]))
+            
+            # Remove from trash
+            cursor.execute("DELETE FROM trash_items WHERE item_id = ?", (item_id,))
+            
+            conn.commit()
+            return jsonify({'message': 'Item restored successfully!'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):

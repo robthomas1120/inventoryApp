@@ -1,5 +1,6 @@
 let inventory = [];
 let filteredInventory = [];
+let isDeleteMode = false;
 
 async function fetchItems() {
     try {
@@ -22,15 +23,33 @@ function displayItems(items) {
     items.forEach(item => {
         const box = document.createElement('div');
         box.classList.add('item-box');
-        box.onclick = () => openQuantityWindow(item);
+        
+        // Only add click handler if not in delete mode
+        if (!isDeleteMode) {
+            box.onclick = () => openQuantityWindow(item);
+        }
+        
+        // Base HTML structure
         box.innerHTML = `
             <img src="${item[3]}" alt="${item[1]}" width="100" height="100">
             <h3>${item[1]}</h3>
             <p>${item[2]}</p>
             <div class="quantity-display">Qty: ${item[4] || 0}</div>
             <div class="price-display">Price: ₱${item[5].toFixed(2)}</div>
-            <button onclick="deleteItem(${item[0]})">Delete</button>
         `;
+
+        // Add delete button only if in delete mode
+        if (isDeleteMode) {
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-btn');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = (e) => {
+                e.stopPropagation();
+                deleteItem(item[0]);
+            };
+            box.appendChild(deleteButton);
+        }
+        
         container.appendChild(box);
     });
 }
@@ -190,5 +209,151 @@ async function deleteItem(itemId) {
         alert("Error deleting the item.");
     }
 }
+
+let trashItems = [];
+
+// Function to view trash
+async function viewTrash() {
+    const trashContainer = document.querySelector('.trash-container');
+    const mainInventory = document.getElementById('inventory-container');
+    
+    try {
+        const response = await fetch('/trash');
+        if (!response.ok) {
+            throw new Error('Failed to fetch trash items');
+        }
+        trashItems = await response.json();
+        displayTrashItems();
+        
+        // Toggle visibility
+        trashContainer.style.display = 'block';
+        mainInventory.style.display = 'none';
+    } catch (error) {
+        console.error('Error fetching trash items:', error);
+    }
+}
+
+// Function to toggle trash view
+function toggleTrash() {
+    const trashContainer = document.querySelector('.trash-container');
+    const mainInventory = document.getElementById('inventory-container');
+    
+    trashContainer.style.display = 'none';
+    mainInventory.style.display = 'grid';
+}
+
+// Function to display trash items
+function displayTrashItems() {
+    const container = document.getElementById('trash-items-container');
+    container.innerHTML = '';  // Clear previous items
+
+    trashItems.forEach(item => {
+        const box = document.createElement('div');
+        box.classList.add('item-box');
+        box.innerHTML = `
+            <img src="${item[4]}" alt="${item[2]}" width="100" height="100">
+            <h3>${item[2]}</h3>
+            <p>${item[3]}</p>
+            <div class="price-display">Price: ₱${item[5].toFixed(2)}</div>
+            <div class="deleted-at">Deleted: ${new Date(item[6]).toLocaleString()}</div>
+            <button onclick="restoreItem(${item[1]})" class="restore-btn">Restore</button>
+        `;
+        container.appendChild(box);
+    });
+}
+
+// Updated delete item function
+async function deleteItem(itemId) {
+    // Create and show delete confirmation modal
+    const modal = document.createElement('div');
+    modal.classList.add('delete-modal');
+    modal.innerHTML = `
+        <div class="delete-modal-content">
+            <h2>Confirm Delete</h2>
+            <p>Are you sure you want to move this item to trash?</p>
+            <p>Items in trash will be automatically deleted after one week.</p>
+            <div class="delete-modal-buttons">
+                <button onclick="confirmDelete(${itemId})" class="confirm-delete">Delete</button>
+                <button onclick="closeDeleteModal()" class="cancel-delete">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+// Function to confirm deletion
+async function confirmDelete(itemId) {
+    try {
+        const response = await fetch(`/items/${itemId}/delete`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            closeDeleteModal();
+            fetchItems();
+            // Show success message
+            alert("Item moved to trash successfully");
+        } else {
+            // Show specific error message from server
+            alert(data.error || "Failed to delete the item.");
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        alert("Error deleting the item. Please try again.");
+    }
+}
+
+// Function to close delete modal
+function closeDeleteModal() {
+    const modal = document.querySelector('.delete-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Function to restore item from trash
+async function restoreItem(itemId) {
+    try {
+        const response = await fetch(`/trash/${itemId}/restore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (response.ok) {
+            // Refresh both trash and main inventory
+            await viewTrash();
+            await fetchItems();
+        } else {
+            alert("Failed to restore the item.");
+        }
+    } catch (error) {
+        console.error('Error restoring item:', error);
+        alert("Error restoring the item.");
+    }
+}
+
+function toggleDeleteMode() {
+    isDeleteMode = !isDeleteMode;
+    const deleteButton = document.getElementById('delete-mode-btn');
+    if (isDeleteMode) {
+        deleteButton.textContent = 'Cancel Delete';
+        deleteButton.style.background = 'linear-gradient(145deg, #3a3a3a, #2a2a2a)';
+    } else {
+        deleteButton.textContent = 'Delete Items';
+        deleteButton.style.background = '';
+    }
+    displayItems(filteredInventory);
+}
+
+// Add event listener for escape key to close modals
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
 
 window.onload = fetchItems;

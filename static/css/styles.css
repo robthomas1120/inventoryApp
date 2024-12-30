@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #1a1a1a;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
     color: #ffffff;
     line-height: 1.6;
 }
@@ -45,14 +45,16 @@ body {
     padding: 15px;
     text-align: center;
     cursor: pointer;
-    background-color: #2a2a2a;
+    background: linear-gradient(145deg, #2a2a2a, #222222);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3),
+                -5px -5px 15px rgba(255, 255, 255, 0.02);
 }
 
 .item-box:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.4),
+                -8px -8px 20px rgba(255, 255, 255, 0.03);
 }
 
 .item-box img {
@@ -280,4 +282,132 @@ body {
     background-color: #5a5a5a;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced delete button */
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 8px 15px;
+    background: linear-gradient(145deg, #ff3b3b, #dc2020);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.delete-btn:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 32, 32, 0.4);
+}
+
+#delete-mode-btn {
+    padding: 12px 25px;
+    font-size: 16px;
+    background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#delete-mode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Style for when delete mode is active */
+#delete-mode-btn.active {
+    background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Delete confirmation modal */
+.delete-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.delete-modal-content {
+    background: linear-gradient(145deg, #2a2a2a, #222222);
+    margin: 15% auto;
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: modalSlide 0.3s ease;
+}
+
+.delete-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.delete-modal-buttons button {
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.confirm-delete {
+    background: linear-gradient(145deg, #ff3b3b, #dc2020);
+    color: white;
+}
+
+.cancel-delete {
+    background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+    color: white;
+}
+
+/* Trash can section */
+.trash-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: linear-gradient(145deg, #2a2a2a, #222222);
+    border-radius: 15px;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3),
+                -5px -5px 15px rgba(255, 255, 255, 0.02);
+}
+
+.trash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.restore-btn {
+    background: linear-gradient(145deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.restore-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
 }
