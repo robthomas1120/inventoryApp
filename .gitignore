@@ -1,2 +1,4 @@
 venv
 inventory.db
+static/inventory.pdf
+static/inventory.xlsx

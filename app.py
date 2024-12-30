@@ -4,6 +4,13 @@ from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
 import json
+from flask import send_file
+import pandas as pd
+import openpyxl
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -111,6 +118,105 @@ def update_quantity(item_id):
 def render_checkout_page():
     return render_template('checkout.html')
 
+@app.route('/export/<string:file_type>', methods=['GET'])
+def export_inventory(file_type):
+    try:
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+
+        # Base query
+        query = "SELECT name, description, quantity, price, last_updated FROM items"
+        params = []
+
+        # Get sorting and filtering parameters
+        sort_by = request.args.get('sort_by', 'name')  # Default to sorting by 'name'
+        order = request.args.get('order', 'asc')  # Default to ascending order
+        date_range = request.args.get('date_range', 'all')
+
+        # Filtering by date range
+        if date_range == 'today':
+            today = datetime.now().strftime("%Y-%m-%d")
+            query += " WHERE date(last_updated) = ?"
+            params.append(today)
+        elif date_range == 'specific_day':
+            specific_date = request.args.get('specificDate')
+            query += " WHERE date(last_updated) = ?"
+            params.append(specific_date)
+        elif date_range == 'specific_month':
+            specific_month = request.args.get('specificMonth')
+            query += " WHERE strftime('%Y-%m', last_updated) = ?"
+            params.append(specific_month)
+        elif date_range == 'specific_year':
+            specific_year = request.args.get('specificYear')
+            query += " WHERE strftime('%Y', last_updated) = ?"
+            params.append(specific_year)
+
+        # Sorting
+        valid_sort_columns = {
+            'name': 'name',
+            'description': 'description',
+            'quantity': 'quantity',
+            'price': 'price',
+            'last_updated': 'last_updated'
+        }
+
+        # Validate and add sorting
+        if sort_by in valid_sort_columns:
+            sort_column = valid_sort_columns[sort_by]
+            sort_order = 'ASC' if order.lower() == 'asc' else 'DESC'
+            query += f" ORDER BY {sort_column} {sort_order}"
+
+        # Execute query
+        cursor.execute(query, params)
+        items = cursor.fetchall()
+        conn.close()
+
+        columns = ['Name', 'Description', 'Quantity', 'Price', 'Last Updated']
+
+        if file_type == 'pdf':
+            # Generate PDF file
+            file_path = 'static/inventory.pdf'
+            pdf = SimpleDocTemplate(file_path, pagesize=landscape(letter))
+            elements = []
+
+            # Create table data (header + rows)
+            data = [columns]  # Add column headers
+            data.extend(items)  # Add rows from the database
+
+            # Create table
+            table = Table(data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Header background color
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Header text color
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center-align all cells
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Header font
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Header padding
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Row background color
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),  # Add grid lines
+                ('ALIGN', (1, 1), (-1, -1), 'LEFT'),  # Align Name and Description to the left
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),  # Regular font for all rows
+                ('WRAP', (0, 0), (-1, -1)),  # Enable text wrapping
+            ]))
+
+            elements.append(table)
+            pdf.build(elements)
+            return send_file(file_path, as_attachment=True, download_name='inventory.pdf')
+
+        elif file_type == 'excel':
+            # Generate Excel file
+            file_path = 'static/inventory.xlsx'
+            df = pd.DataFrame(items, columns=columns)
+            df.to_excel(file_path, index=False, engine='openpyxl')
+            return send_file(file_path, as_attachment=True, download_name='inventory.xlsx')
+
+        return jsonify({'error': 'Unsupported file type'}), 400
+
+    except Exception as e:
+        print(f"Error exporting inventory: {str(e)}")
+        return jsonify({'error': 'Failed to export inventory', 'details': str(e)}), 500
+
+
+    
 @app.route('/checkout', methods=['POST'])
 def checkout():
     data = request.get_json()
@@ -235,7 +341,7 @@ def move_to_trash(item_id):
     finally:
         if conn:
             conn.close()
-            
+
 @app.route('/trash/<int:item_id>/restore', methods=['POST'])
 def restore_from_trash(item_id):
     try:

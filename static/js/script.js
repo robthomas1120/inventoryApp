@@ -349,6 +349,90 @@ function toggleDeleteMode() {
     displayItems(filteredInventory);
 }
 
+async function exportInventory(fileType) {
+    const sortBy = document.getElementById('filterAttribute')?.value || 'Name';
+    const sortOrder = document.getElementById('sortOrder')?.value || 'asc';
+
+    try {
+        const response = await fetch(`/export/${fileType}?sort_by=${sortBy}&order=${sortOrder}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to export inventory as ${fileType}. Server response: ${errorText}`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `inventory.${fileType}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    } catch (error) {
+        console.error(`Error exporting inventory: ${error.message}`);
+        alert(`Error exporting inventory: ${error.message}`);
+    }
+}
+
+function openExportDialog() {
+    document.getElementById('export-dialog').style.display = 'block';
+}
+
+function closeExportDialog() {
+    document.getElementById('export-dialog').style.display = 'none';
+}
+
+// Handle changes in date range selection
+document.getElementById('dateRange').addEventListener('change', function() {
+    const dateRange = this.value;
+    const specificDateInputs = document.getElementById('specific-date-inputs');
+    specificDateInputs.style.display = (dateRange === 'specific_day' || dateRange === 'specific_month' || dateRange === 'specific_year') ? 'block' : 'none';
+});
+
+// Submit export request
+async function submitExport() {
+    const fileType = document.getElementById('fileType').value;
+    const sortBy = document.getElementById('sortBy').value;
+    const dateRange = document.getElementById('dateRange').value;
+
+    let dateParams = {};
+    if (dateRange === 'specific_day') {
+        dateParams.specificDate = document.getElementById('specificDate').value;
+    } else if (dateRange === 'specific_month') {
+        dateParams.specificMonth = document.getElementById('specificMonth').value;
+    } else if (dateRange === 'specific_year') {
+        dateParams.specificYear = document.getElementById('specificYear').value;
+    }
+
+    const queryParams = new URLSearchParams({
+        sort_by: sortBy,
+        date_range: dateRange,
+        ...dateParams,
+    }).toString();
+
+    try {
+        const response = await fetch(`/export/${fileType}?${queryParams}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to export inventory as ${fileType}. Server response: ${errorText}`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `inventory.${fileType === 'excel' ? 'xlsx' : 'pdf'}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        closeExportDialog();
+    } catch (error) {
+        console.error(`Error exporting inventory: ${error.message}`);
+        alert(`Error exporting inventory: ${error.message}`);
+    }
+}
+
 // Add event listener for escape key to close modals
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {

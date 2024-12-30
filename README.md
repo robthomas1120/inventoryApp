@@ -9,6 +9,11 @@ source venv/bin/activate
 install flask (make sure you are inside the inventoryApp folder)
 pip install flask
 
+and pandas for excel and pdf exports
+pip install pandas
+
+pip install pandas openpyxl reportlab weasyprint
+
 run the app
 python3 app.py
 
